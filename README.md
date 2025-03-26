@@ -1,2 +1,2 @@
 # Info1601_GroupProject
-Group project
+This repo serves as a repository for our group project based on a social media client webapp for pets.
