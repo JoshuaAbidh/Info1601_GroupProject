@@ -6,7 +6,7 @@ FurTography is more than just a social media platform for pet lovers—it's a sa
 
 ### Our Mission
 
-In a world where social media can often be a source of stress, comparison, and negativity, FurTography stands as a beacon of positivity and genuine connection. We believe that sharing our pets' joy should be a stress-free, uplifting experience that brings people together rather than driving them apart. We want you to have your fate in humanity restored with the freedom our fluffy friends bring!
+In a world where social media can often be a source of stress, comparison, and negativity, FurTography stands as a beacon of positivity and genuine connection. We believe that sharing our pets' joy should be a stress-free, uplifting experience that brings people together rather than driving them apart. We want you to have your fate in humanity restored with the freedom our pet companions bring!
 
 ### The Problem We Solve
 
@@ -50,7 +50,7 @@ Before you begin, ensure you have the following installed:
 ### Installation Steps
 
 1. Clone the repository
-```bash
+```cmd
 git clone https://github.com/JoshuaAbidh/Info1601_GroupProject.git
 cd Info1601_GroupProject
 ```

@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showMainPage();
     }
 
-    // Add event listener for register link
+    // Added event listener for register link
     const registerLink = document.querySelector('a[href="#"]');
     if (registerLink) {
         registerLink.addEventListener('click', (e) => {
@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Add event listener for login form
+    // Added event listener for login form
     if (loginForm) {
         loginForm.addEventListener('submit', handleLogin);
     }
@@ -288,7 +288,7 @@ function showCreatePost() {
         </nav>
     `;
 
-    // Add image preview
+    // Added image preview
     const imageInput = document.getElementById('post-image');
     const uploadArea = document.getElementById('upload-area');
     const postButton = document.getElementById('post-button');
@@ -433,7 +433,7 @@ function handleLogout() {
     showLoginPage();
 }
 
-// Add this new function to handle profile updates
+// Added this new function to handle profile updates
 async function updateUserProfile(profilePicture, bio) {
     try {
         const response = await fetch(`${API_URL}/users/profile`, {
@@ -496,7 +496,7 @@ function showProfile() {
         </nav>
     `;
 
-    // Add profile picture change functionality
+    // Added profile picture change functionality
     const profileImageInput = document.getElementById('profile-image-input');
     const profilePicture = document.getElementById('profile-picture');
 
@@ -579,7 +579,7 @@ function showProfileSetup() {
         </div>
     `;
 
-    // Add profile picture change functionality
+    // Added profile picture change functionality
     const profileImageInput = document.getElementById('profile-image-input');
     const profilePicture = document.getElementById('profile-picture');
 
@@ -615,7 +615,7 @@ async function completeProfileSetup() {
     }
 }
 
-// Add these new API functions
+// Added these new API functions
 async function fetchUserPosts() {
     try {
         const response = await fetch(`${API_URL}/users/posts`, {
@@ -660,7 +660,7 @@ async function deletePost(postId) {
     }
 }
 
-// Add the new showMyPosts function
+// Added the new showMyPosts function
 async function showMyPosts() {
     document.body.innerHTML = `
         <div class="main-content">
@@ -710,7 +710,7 @@ async function showMyPosts() {
     }
 }
 
-// Add the delete post handler
+// Added the delete post handler
 async function handleDeletePost(postId) {
     if (!confirm('Are you sure you want to delete this post?')) {
         return;
@@ -725,7 +725,7 @@ async function handleDeletePost(postId) {
     }
 }
 
-// Add this new API function
+// Added this new API function
 async function fetchUserInfo(username) {
     try {
         const response = await fetch(`${API_URL}/users/${username}`, {
@@ -748,7 +748,7 @@ async function fetchUserInfo(username) {
     }
 }
 
-// Add the new showUserProfile function
+// Added the new showUserProfile function
 async function showUserProfile(username) {
     try {
         const { user, posts } = await fetchUserInfo(username);
