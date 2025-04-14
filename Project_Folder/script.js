@@ -141,21 +141,28 @@ async function fetchPosts() {
 
 async function addReaction(postId, reaction) {
     try {
+        console.log('postId:', postId, 'reaction:', reaction);
+        console.log('Sending reaction request:', {
+            postId,
+            reaction,
+        });
+
         const response = await fetch(`${API_URL}/posts/${postId}/reactions`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`, // Ensure the token is valid
             },
-            body: JSON.stringify({ type: reaction })
+            body: JSON.stringify({ type: reaction }), // Ensure the body matches the server's expected format
         });
 
-        const data = await response.json();
-        
         if (!response.ok) {
-            throw new Error(data.error || 'Failed to add reaction');
+            const errorData = await response.json();
+            console.error('Server error response:', errorData); // Log the server's error response
+            throw new Error(`Error adding reaction: ${response.status} - ${errorData.message || 'Unknown error'}`);
         }
 
+        const data = await response.json();
         return data;
     } catch (error) {
         console.error('Add reaction error:', error);
@@ -813,4 +820,4 @@ async function showUserProfile(username) {
         console.error('Error loading user profile:', error);
         alert('Error loading user profile: ' + error.message);
     }
-} 
+}

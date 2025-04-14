@@ -181,28 +181,48 @@ app.get('/api/posts', authenticateToken, async (req, res) => {
 app.post('/api/posts/:postId/reactions', authenticateToken, async (req, res) => {
     try {
         const { type } = req.body;
+
+        // Validate the reaction type
+        if (!type || typeof type !== 'string') {
+            console.error('Invalid reaction type:', type);
+            return res.status(400).json({ error: 'Invalid reaction type' });
+        }
+
+        console.log('Reaction type:', type);
+
+        // Find the post by ID
         const post = await Post.findById(req.params.postId);
-        
         if (!post) {
+            console.error('Post not found with ID:', req.params.postId);
             return res.status(404).json({ error: 'Post not found' });
         }
 
+        console.log('Post found:', post);
+
+        // Check if the user has already reacted
         const existingReaction = post.reactions.find(
             r => r.username === req.user.username
         );
 
         if (existingReaction) {
+            // Update the existing reaction
+            console.log('Updating existing reaction for user:', req.user.username);
             existingReaction.type = type;
         } else {
+            // Add a new reaction
+            console.log('Adding new reaction for user:', req.user.username);
             post.reactions.push({
                 username: req.user.username,
                 type
             });
         }
 
+        // Save the updated post
         await post.save();
-        res.json(post);
+        console.log('Reaction added successfully for post ID:', req.params.postId);
+        res.json({ message: 'Reaction added successfully', post });
     } catch (error) {
+        console.error('Error adding reaction:', error); // Log the exact error
         res.status(500).json({ error: 'Error adding reaction' });
     }
 });
@@ -240,8 +260,8 @@ app.put('/api/users/profile', authenticateToken, async (req, res) => {
 app.delete('/api/posts/:postId', authenticateToken, async (req, res) => {
     try {
         const post = await Post.findById(req.params.postId);
-        
         if (!post) {
+            console.error('Post not found with ID:', req.params.postId);
             return res.status(404).json({ error: 'Post not found' });
         }
 
@@ -301,4 +321,4 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
-}); 
+});
