@@ -181,6 +181,13 @@ app.get('/api/posts', authenticateToken, async (req, res) => {
 app.post('/api/posts/:postId/reactions', authenticateToken, async (req, res) => {
     try {
         const { type } = req.body;
+        const postId = req.params.postId;
+
+        console.log('Received reaction request:', {
+            postId,
+            type,
+            user: req.user.username
+        });
 
         // Validate the reaction type
         if (!type || typeof type !== 'string') {
@@ -188,16 +195,23 @@ app.post('/api/posts/:postId/reactions', authenticateToken, async (req, res) => 
             return res.status(400).json({ error: 'Invalid reaction type' });
         }
 
-        console.log('Reaction type:', type);
+        // Validate postId
+        if (!postId || !postId.match(/^[0-9a-fA-F]{24}$/)) {
+            console.error('Invalid post ID:', postId);
+            return res.status(400).json({ error: 'Invalid post ID' });
+        }
 
         // Find the post by ID
-        const post = await Post.findById(req.params.postId);
+        const post = await Post.findById(postId);
         if (!post) {
-            console.error('Post not found with ID:', req.params.postId);
+            console.error('Post not found with ID:', postId);
             return res.status(404).json({ error: 'Post not found' });
         }
 
-        console.log('Post found:', post);
+        console.log('Post found:', {
+            id: post._id,
+            reactions: post.reactions
+        });
 
         // Check if the user has already reacted
         const existingReaction = post.reactions.find(
@@ -218,12 +232,27 @@ app.post('/api/posts/:postId/reactions', authenticateToken, async (req, res) => 
         }
 
         // Save the updated post
-        await post.save();
-        console.log('Reaction added successfully for post ID:', req.params.postId);
-        res.json({ message: 'Reaction added successfully', post });
+        const savedPost = await post.save();
+        console.log('Reaction added successfully:', {
+            postId: savedPost._id,
+            reactions: savedPost.reactions
+        });
+        
+        res.json({ 
+            message: 'Reaction added successfully', 
+            post: savedPost 
+        });
     } catch (error) {
-        console.error('Error adding reaction:', error); // Log the exact error
-        res.status(500).json({ error: 'Error adding reaction' });
+        console.error('Error adding reaction:', {
+            error: error.message,
+            stack: error.stack,
+            postId: req.params.postId,
+            user: req.user.username
+        });
+        res.status(500).json({ 
+            error: 'Error adding reaction',
+            details: error.message 
+        });
     }
 });
 
