@@ -40,10 +40,12 @@ const postSchema = new mongoose.Schema({
     image: { type: String, required: true },
     caption: { type: String, default: '' },
     likes: { type: Number, default: 0 },
-    reactions: [{
-        username: String,
-        type: String
-    }],
+    reactions: [
+        {
+            username: { type: String, required: true },
+            type: { type: String, required: true }
+        }
+    ],
     createdAt: { type: Date, default: Date.now }
 });
 

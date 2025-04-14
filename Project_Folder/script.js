@@ -425,10 +425,11 @@ async function loadPosts() {
 
 async function handleReaction(postId, reaction) {
     try {
-        await addReaction(postId, reaction);
+        await addReaction(postId, reaction); // Send the reaction request to the server
+        alert(`Reaction successful! You reacted with "${reaction}"`); // Show success message
         await loadPosts(); // Reload posts to show updated reactions
     } catch (error) {
-        alert(error.message);
+        alert(error.message); // Show error message if the reaction fails
     }
 }
 
