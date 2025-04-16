@@ -213,6 +213,7 @@ async function handleRegister(e) {
 function showLoginPage() {
     document.body.innerHTML = `
         <div class="auth-container">
+            <img class="dog-logo" src="images/logo.png" alt="Dog logo" />
             <h1>FurTography 🐾</h1>
             <form id="loginForm">
                 <div class="form-group">
@@ -232,6 +233,7 @@ function showLoginPage() {
 function showRegisterPage() {
     document.body.innerHTML = `
         <div class="auth-container">
+            <img class="dog-logo" src="images/logo.png" alt="Dog logo" />
             <h1>FurTography 🐾</h1>
             <form id="registerForm">
                 <div class="form-group">
@@ -682,7 +684,10 @@ async function showMyPosts() {
         const postsContainer = document.getElementById('my-posts-list');
 
         if (posts.length === 0) {
-            postsContainer.innerHTML = '<p>You haven\'t created any posts yet.</p>';
+            postsContainer.innerHTML = `
+                <p>You haven't created any posts yet.</p>
+                <div class="no-posts"></div>
+            `;
             return;
         }
 
