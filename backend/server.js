@@ -262,8 +262,10 @@ app.post('/api/posts/:postId/reactions', authenticateToken, async (req, res) => 
 app.put('/api/users/profile', authenticateToken, async (req, res) => {
     try {
         const { profilePicture, bio } = req.body;
+        console.log('Updating profile with:', { profilePicture, bio });
         console.log('Updating profile for user:', req.user.username);
         console.log('New profile picture:', profilePicture);
+        console.log('New bio:', bio);
         
         const user = await User.findOne({ username: req.user.username });
 
@@ -272,18 +274,26 @@ app.put('/api/users/profile', authenticateToken, async (req, res) => {
             return res.status(404).json({ error: 'User not found' });
         }
 
-        if (profilePicture) {
+        if (profilePicture && typeof profilePicture === 'string') {
             console.log('Updating profile picture from:', user.profilePicture, 'to:', profilePicture);
             user.profilePicture = profilePicture;
+        } else if (profilePicture) {
+            console.error('Invalid profile picture format:', profilePicture);
+            return res.status(400).json({ error: 'Invalid profile picture format' });
         }
         if (bio) user.bio = bio;
 
-        await user.save();
-        console.log('Profile updated successfully');
-        res.json(user);
+        try {
+            await user.save();
+            console.log('Profile updated successfully');
+            res.json(user);
+        } catch (error) {
+            console.error('Database save error:', error);
+            res.status(500).json({ error: 'Error saving profile to database', details: error.message });
+        }
     } catch (error) {
         console.error('Update profile error:', error);
-        res.status(500).json({ error: 'Error updating profile' });
+        res.status(500).json({ error: 'Error updating profile', details: error.message });
     }
 });
 
