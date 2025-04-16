@@ -42,7 +42,8 @@ body {
     gap: 20px;
     max-width: 1200px;
     margin: 20px auto;
-    min-height: 600px;
+    min-height: 400px;
+    width: 700px;
 }
 
 .create-post h2 {
@@ -409,6 +410,7 @@ body {
     
     .post-image {
         max-height: 400px;
+        padding: 20px;
     }
     
     .nav-bar {

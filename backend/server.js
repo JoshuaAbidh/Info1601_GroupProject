@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -16,12 +17,57 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static('public'));
 
 // MongoDB Connection
-mongoose.connect('mongodb://localhost:27017/pawgram', {
+const createDefaultAccount = async () => {
+    try {
+        const defaultUsername = 'bob';
+        const defaultPassword = 'bobpass'; // Default password
+        const defaultBio = 'This is the default account for Bob.';
+        const defaultProfilePicture = 'https://raw.githubusercontent.com/identicons/identicons/master/default.png';
+
+        // Check if the default account already exists
+        const existingUser = await User.findOne({ username: defaultUsername });
+        if (!existingUser) {
+            console.log('Default account not found. Creating one...');
+            
+            // Hash the default password
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(defaultPassword, salt);
+
+            // Create the default user
+            const defaultUser = new User({
+                username: defaultUsername,
+                password: hashedPassword,
+                bio: defaultBio,
+                profilePicture: defaultProfilePicture
+            });
+
+            await defaultUser.save();
+            console.log('Default account created successfully:', defaultUsername);
+        } else {
+            console.log('Default account already exists:', defaultUsername);
+        }
+    } catch (error) {
+        console.error('Error creating default account:', error);
+    }
+};
+
+mongoose.connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true
 })
-.then(() => console.log('Connected to MongoDB'))
-.catch(err => console.error('MongoDB connection error:', err));
+.then(() => {
+    console.log('Connected to MongoDB Atlas');
+    createDefaultAccount(); // Create or update the default account
+})
+.catch(err => console.error('MongoDB Atlas connection error:', err));
+
+mongoose.connection.on('connected', () => {
+    console.log('MongoDB Atlas connection established successfully');
+});
+
+mongoose.connection.on('error', (err) => {
+    console.error('MongoDB Atlas connection error:', err);
+});
 
 // User Schema
 const userSchema = new mongoose.Schema({
@@ -40,10 +86,12 @@ const postSchema = new mongoose.Schema({
     image: { type: String, required: true },
     caption: { type: String, default: '' },
     likes: { type: Number, default: 0 },
-    reactions: [{
-        username: String,
-        type: String
-    }],
+    reactions: [
+        {
+            username: { type: String, required: true },
+            type: { type: String, required: true }
+        }
+    ],
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -73,10 +121,12 @@ const authenticateToken = (req, res, next) => {
 app.post('/api/register', async (req, res) => {
     try {
         const { username, password } = req.body;
-        
+        console.log('Registration attempt for username:', username);
+
         // Check if user exists
         const existingUser = await User.findOne({ username });
         if (existingUser) {
+            console.error('Username already exists:', username);
             return res.status(400).json({ error: 'Username already exists' });
         }
 
@@ -91,13 +141,11 @@ app.post('/api/register', async (req, res) => {
         });
 
         await user.save();
+        console.log('User registered successfully:', username);
         res.status(201).json({ message: 'User registered successfully' });
     } catch (error) {
-        if (error.code === 11000) {
-            res.status(400).json({ error: 'Username already exists' });
-        } else {
-            res.status(500).json({ error: 'Error registering user' });
-        }
+        console.error('Error registering user:', error);
+        res.status(500).json({ error: 'Error registering user' });
     }
 });
 
@@ -105,21 +153,25 @@ app.post('/api/register', async (req, res) => {
 app.post('/api/login', async (req, res) => {
     try {
         const { username, password } = req.body;
-        
+        console.log('Login attempt for username:', username);
+
         // Find user
         const user = await User.findOne({ username });
         if (!user) {
+            console.error('User not found:', username);
             return res.status(400).json({ error: 'User not found' });
         }
 
         // Check password
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) {
+            console.error('Invalid password for user:', username);
             return res.status(400).json({ error: 'Invalid password' });
         }
 
         // Create token
         const token = jwt.sign({ username: user.username }, 'your-secret-key');
+        console.log('Login successful for user:', username);
         res.json({
             token,
             user: {
@@ -129,6 +181,7 @@ app.post('/api/login', async (req, res) => {
             }
         });
     } catch (error) {
+        console.error('Error logging in:', error);
         res.status(500).json({ error: 'Error logging in' });
     }
 });
@@ -181,29 +234,78 @@ app.get('/api/posts', authenticateToken, async (req, res) => {
 app.post('/api/posts/:postId/reactions', authenticateToken, async (req, res) => {
     try {
         const { type } = req.body;
-        const post = await Post.findById(req.params.postId);
-        
+        const postId = req.params.postId;
+
+        console.log('Received reaction request:', {
+            postId,
+            type,
+            user: req.user.username
+        });
+
+        // Validate the reaction type
+        if (!type || typeof type !== 'string') {
+            console.error('Invalid reaction type:', type);
+            return res.status(400).json({ error: 'Invalid reaction type' });
+        }
+
+        // Validate postId
+        if (!postId || !postId.match(/^[0-9a-fA-F]{24}$/)) {
+            console.error('Invalid post ID:', postId);
+            return res.status(400).json({ error: 'Invalid post ID' });
+        }
+
+        // Find the post by ID
+        const post = await Post.findById(postId);
         if (!post) {
+            console.error('Post not found with ID:', postId);
             return res.status(404).json({ error: 'Post not found' });
         }
 
+        console.log('Post found:', {
+            id: post._id,
+            reactions: post.reactions
+        });
+
+        // Check if the user has already reacted
         const existingReaction = post.reactions.find(
             r => r.username === req.user.username
         );
 
         if (existingReaction) {
+            // Update the existing reaction
+            console.log('Updating existing reaction for user:', req.user.username);
             existingReaction.type = type;
         } else {
+            // Add a new reaction
+            console.log('Adding new reaction for user:', req.user.username);
             post.reactions.push({
                 username: req.user.username,
                 type
             });
         }
 
-        await post.save();
-        res.json(post);
+        // Save the updated post
+        const savedPost = await post.save();
+        console.log('Reaction added successfully:', {
+            postId: savedPost._id,
+            reactions: savedPost.reactions
+        });
+        
+        res.json({ 
+            message: 'Reaction added successfully', 
+            post: savedPost 
+        });
     } catch (error) {
-        res.status(500).json({ error: 'Error adding reaction' });
+        console.error('Error adding reaction:', {
+            error: error.message,
+            stack: error.stack,
+            postId: req.params.postId,
+            user: req.user.username
+        });
+        res.status(500).json({ 
+            error: 'Error adding reaction',
+            details: error.message 
+        });
     }
 });
 
@@ -211,8 +313,10 @@ app.post('/api/posts/:postId/reactions', authenticateToken, async (req, res) => 
 app.put('/api/users/profile', authenticateToken, async (req, res) => {
     try {
         const { profilePicture, bio } = req.body;
+        console.log('Updating profile with:', { profilePicture, bio });
         console.log('Updating profile for user:', req.user.username);
         console.log('New profile picture:', profilePicture);
+        console.log('New bio:', bio);
         
         const user = await User.findOne({ username: req.user.username });
 
@@ -221,18 +325,26 @@ app.put('/api/users/profile', authenticateToken, async (req, res) => {
             return res.status(404).json({ error: 'User not found' });
         }
 
-        if (profilePicture) {
+        if (profilePicture && typeof profilePicture === 'string') {
             console.log('Updating profile picture from:', user.profilePicture, 'to:', profilePicture);
             user.profilePicture = profilePicture;
+        } else if (profilePicture) {
+            console.error('Invalid profile picture format:', profilePicture);
+            return res.status(400).json({ error: 'Invalid profile picture format' });
         }
         if (bio) user.bio = bio;
 
-        await user.save();
-        console.log('Profile updated successfully');
-        res.json(user);
+        try {
+            await user.save();
+            console.log('Profile updated successfully');
+            res.json(user);
+        } catch (error) {
+            console.error('Database save error:', error);
+            res.status(500).json({ error: 'Error saving profile to database', details: error.message });
+        }
     } catch (error) {
         console.error('Update profile error:', error);
-        res.status(500).json({ error: 'Error updating profile' });
+        res.status(500).json({ error: 'Error updating profile', details: error.message });
     }
 });
 
@@ -240,8 +352,8 @@ app.put('/api/users/profile', authenticateToken, async (req, res) => {
 app.delete('/api/posts/:postId', authenticateToken, async (req, res) => {
     try {
         const post = await Post.findById(req.params.postId);
-        
         if (!post) {
+            console.error('Post not found with ID:', req.params.postId);
             return res.status(404).json({ error: 'Post not found' });
         }
 
@@ -293,6 +405,11 @@ app.get('/api/users/:username', authenticateToken, async (req, res) => {
     }
 });
 
+// Get API Config
+app.get('/api/config', (req, res) => {
+    res.json({ apiUrl: process.env.API_URL });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
@@ -301,4 +418,4 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
-}); 
+});

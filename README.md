@@ -46,6 +46,7 @@ Before you begin, ensure you have the following installed:
 - Node.js (v14 or higher)
 - MongoDB
 - A code editor (VS Code recommended)
+- live server (VS Code extension)
 
 ### Installation Steps
 
@@ -67,9 +68,7 @@ cd Info1601_GroupProject
 PS C:\Users\YourPcName\Documents\GitHub\Info1601_GroupProject> cd backend
 PS C:\Users\YourPcName\Documents\GitHub\Info1601_GroupProject\backend>
 ```
-- Install the required dependencies:
-```powershell
-PS C:\Users\YourPcName\Documents\GitHub\Info1601_GroupProject\backend> npm install
+
 ```
 - Start the backend server:
 ```powershell
@@ -107,9 +106,10 @@ If you encounter any issues:
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
-I, Joshua Abidh, the DevOps of this project will oversee all Pull Requests made to this project and will give the thumbs up on it only if I see that it is not harmful towards the website code and can be of use to our project.
+I, Joshua Abidh, the DevOps of this project will oversee all Pull Requests made to this project and will give the thumbs up on it only if I see that it is not harmful towards the website code and can be of use to our project. Javascipt and backend set up done by Joshua Abidh.
 
 This Project was done by All Members of The FurTography group which includes: 
+Joshua - DevOps
 Dashon - Marketing
 Hovan - Lead and Ui
 Chelsea - Ui

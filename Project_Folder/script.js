@@ -15,11 +15,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // Check if user is logged in
     const savedUser = localStorage.getItem('currentUser');
     const savedToken = localStorage.getItem('token');
-    
+
+    console.log('Saved user:', savedUser);
+    console.log('Saved token:', savedToken);
+
     if (savedUser && savedToken) {
-        currentUser = JSON.parse(savedUser);
-        token = savedToken;
-        showMainPage();
+        try {
+            currentUser = JSON.parse(savedUser); // Safely parse savedUser
+            token = savedToken;
+            showMainPage();
+        } catch (error) {
+            console.error('Error parsing saved user:', error);
+            localStorage.removeItem('currentUser'); // Clear invalid data
+            localStorage.removeItem('token');
+        }
     }
 
     // Added event listener for register link
@@ -35,6 +44,28 @@ document.addEventListener('DOMContentLoaded', () => {
     if (loginForm) {
         loginForm.addEventListener('submit', handleLogin);
     }
+});
+
+const mongoose = require('mongoose');
+
+// MongoDB Connection
+console.log('MONGO_URI:', process.env.MONGO_URI);
+mongoose.connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+})
+.then(() => {
+    console.log('Connected to MongoDB Atlas');
+    createDefaultAccount(); // Create or update the default account
+})
+.catch(err => console.error('MongoDB Atlas connection error:', err));
+
+mongoose.connection.on('connected', () => {
+    console.log('MongoDB Atlas connection established successfully');
+});
+
+mongoose.connection.on('error', (err) => {
+    console.error('MongoDB connection error:', err);
 });
 
 // API Functions
@@ -141,27 +172,42 @@ async function fetchPosts() {
 
 async function addReaction(postId, reaction) {
     try {
+        console.log('postId:', postId, 'reaction:', reaction);
+        console.log('Sending reaction request:', {
+            postId,
+            reaction,
+        });
+
         const response = await fetch(`${API_URL}/posts/${postId}/reactions`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`, // Ensure the token is valid
             },
-            body: JSON.stringify({ type: reaction })
+            body: JSON.stringify({ type: reaction }), // Ensure the body matches the server's expected format
         });
 
-        const data = await response.json();
-        
         if (!response.ok) {
-            throw new Error(data.error || 'Failed to add reaction');
+            const errorData = await response.json();
+            console.error('Server error response:', errorData); // Log the server's error response
+            throw new Error(`Error adding reaction: ${response.status} - ${errorData.message || 'Unknown error'}`);
         }
 
+        const data = await response.json();
         return data;
     } catch (error) {
         console.error('Add reaction error:', error);
         throw error;
     }
 }
+
+async function getConfig() {
+    const response = await fetch('http://localhost:5000/api/config');
+    const config = await response.json();
+    console.log('API URL:', config.apiUrl);
+}
+
+getConfig();
 
 // Event Handlers
 async function handleLogin(e) {
@@ -195,7 +241,7 @@ async function handleRegister(e) {
         
         currentUser = {
             username: username,
-            profilePicture: 'https://i.imgur.com/6VBx3io.png',
+            profilePicture: 'https://ui-avatars.com/api/?name=Default+User&background=random', // New default profile picture
             bio: ''
         };
         token = loginData.token;
@@ -248,6 +294,11 @@ function showRegisterPage() {
         </div>
     `;
     document.getElementById('registerForm').addEventListener('submit', handleRegister);
+}
+
+function showRegisterForm() {
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('registerForm').style.display = 'block';
 }
 
 async function showMainPage() {
@@ -323,42 +374,10 @@ function showCreatePost() {
         }
 
         try {
-            // Create a canvas to compress the image
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            const img = new Image();
-
-            img.onload = async () => {
-                // Set maximum dimensions (1920x1080)
-                const MAX_WIDTH = 1920;
-                const MAX_HEIGHT = 1080;
-                
-                // Calculate new dimensions while maintaining aspect ratio
-                let width = img.width;
-                let height = img.height;
-                
-                if (width > height) {
-                    if (width > MAX_WIDTH) {
-                        height *= MAX_WIDTH / width;
-                        width = MAX_WIDTH;
-                    }
-                } else {
-                    if (height > MAX_HEIGHT) {
-                        width *= MAX_HEIGHT / height;
-                        height = MAX_HEIGHT;
-                    }
-                }
-
-                // Set canvas dimensions
-                canvas.width = width;
-                canvas.height = height;
-
-                // Draw and compress image
-                ctx.drawImage(img, 0, 0, width, height);
-                
-                // Convert to compressed JPEG with higher quality (0.8)
-                const compressedImage = canvas.toDataURL('image/jpeg', 0.8);
-
+            const compressedImageBlob = await compressImage(imageInput.files[0]);
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                const compressedImage = event.target.result;
                 try {
                     await createPost(compressedImage, caption);
                     alert('Post created successfully!');
@@ -367,8 +386,7 @@ function showCreatePost() {
                     alert(error.message || 'Failed to create post');
                 }
             };
-
-            img.src = URL.createObjectURL(imageInput.files[0]);
+            reader.readAsDataURL(compressedImageBlob);
         } catch (error) {
             console.error('Error processing image:', error);
             alert('Error processing image. Please try again.');
@@ -420,10 +438,11 @@ async function loadPosts() {
 
 async function handleReaction(postId, reaction) {
     try {
-        await addReaction(postId, reaction);
+        await addReaction(postId, reaction); // Send the reaction request to the server
+        alert(`Reaction successful! You reacted with "${reaction}"`); // Show success message
         await loadPosts(); // Reload posts to show updated reactions
     } catch (error) {
-        alert(error.message);
+        alert(error.message); // Show error message if the reaction fails
     }
 }
 
@@ -504,10 +523,11 @@ function showProfile() {
 
     profileImageInput.addEventListener('change', async (e) => {
         if (e.target.files[0]) {
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                try {
-                    const newProfilePicture = e.target.result;
+            try {
+                const compressedImageBlob = await compressImage(e.target.files[0]);
+                const reader = new FileReader();
+                reader.onload = async (event) => {
+                    const newProfilePicture = event.target.result;
                     profilePicture.src = newProfilePicture;
                     
                     const updatedUser = await updateUserProfile(newProfilePicture, currentUser.bio);
@@ -515,11 +535,11 @@ function showProfile() {
                     localStorage.setItem('currentUser', JSON.stringify(currentUser));
                     
                     await loadPosts();
-                } catch (error) {
-                    alert('Failed to update profile picture: ' + error.message);
-                }
-            };
-            reader.readAsDataURL(e.target.files[0]);
+                };
+                reader.readAsDataURL(compressedImageBlob);
+            } catch (error) {
+                alert('Failed to update profile picture: ' + error.message);
+            }
         }
     });
 }
@@ -585,14 +605,20 @@ function showProfileSetup() {
     const profileImageInput = document.getElementById('profile-image-input');
     const profilePicture = document.getElementById('profile-picture');
 
-    profileImageInput.addEventListener('change', (e) => {
+    profileImageInput.addEventListener('change', async (e) => {
         if (e.target.files[0]) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                profilePicture.src = e.target.result;
-                currentUser.profilePicture = e.target.result;
-            };
-            reader.readAsDataURL(e.target.files[0]);
+            try {
+                const compressedImageBlob = await compressImage(e.target.files[0]);
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    profilePicture.src = event.target.result;
+                    currentUser.profilePicture = event.target.result;
+                };
+                reader.readAsDataURL(compressedImageBlob);
+            } catch (error) {
+                console.error('Error compressing image:', error);
+                alert('Error compressing image. Please try again.');
+            }
         }
     });
 }
@@ -818,4 +844,53 @@ async function showUserProfile(username) {
         console.error('Error loading user profile:', error);
         alert('Error loading user profile: ' + error.message);
     }
-} 
+}
+
+// Added the compressImage function
+function compressImage(file, maxWidth = 800, maxHeight = 800, quality = 0.8) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+
+                let width = img.width;
+                let height = img.height;
+
+                // Maintain aspect ratio
+                if (width > maxWidth || height > maxHeight) {
+                    if (width > height) {
+                        height = Math.round((height * maxWidth) / width);
+                        width = maxWidth;
+                    } else {
+                        width = Math.round((width * maxHeight) / height);
+                        height = maxHeight;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Compress the image
+                canvas.toBlob(
+                    (blob) => {
+                        if (blob) {
+                            resolve(blob);
+                        } else {
+                            reject(new Error('Image compression failed'));
+                        }
+                    },
+                    'image/jpeg',
+                    quality // Compression quality (0.8 = 80%)
+                );
+            };
+            img.onerror = (error) => reject(error);
+            img.src = event.target.result;
+        };
+        reader.onerror = (error) => reject(error);
+        reader.readAsDataURL(file);
+    });
+}
