@@ -16,11 +16,48 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static('public'));
 
 // MongoDB Connection
+const createDefaultAccount = async () => {
+    try {
+        const defaultUsername = 'bob';
+        const defaultPassword = 'bobpass'; // Default password
+        const defaultBio = 'This is the default account for Bob.';
+        const defaultProfilePicture = 'https://raw.githubusercontent.com/identicons/identicons/master/default.png';
+
+        // Check if the default account already exists
+        const existingUser = await User.findOne({ username: defaultUsername });
+        if (!existingUser) {
+            console.log('Default account not found. Creating one...');
+            
+            // Hash the default password
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(defaultPassword, salt);
+
+            // Create the default user
+            const defaultUser = new User({
+                username: defaultUsername,
+                password: hashedPassword,
+                bio: defaultBio,
+                profilePicture: defaultProfilePicture
+            });
+
+            await defaultUser.save();
+            console.log('Default account created successfully:', defaultUsername);
+        } else {
+            console.log('Default account already exists:', defaultUsername);
+        }
+    } catch (error) {
+        console.error('Error creating default account:', error);
+    }
+};
+
 mongoose.connect('mongodb://localhost:27017/pawgram', {
     useNewUrlParser: true,
     useUnifiedTopology: true
 })
-.then(() => console.log('Connected to MongoDB'))
+.then(() => {
+    console.log('Connected to MongoDB');
+    createDefaultAccount(); // Create or update the default account
+})
 .catch(err => console.error('MongoDB connection error:', err));
 
 // User Schema
