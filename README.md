@@ -46,6 +46,7 @@ Before you begin, ensure you have the following installed:
 - Node.js (v14 or higher)
 - MongoDB
 - A code editor (VS Code recommended)
+- live server (VS Code extension)
 
 ### Installation Steps
 
