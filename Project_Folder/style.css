@@ -18,7 +18,7 @@
 
 body {
     font-family: Arial, sans-serif;
-    background-color: #f0f2f5;
+    background-color: #cae4ff;
     color: #333;
     line-height: 1.6;
 }
@@ -129,12 +129,14 @@ body {
     font-size: 24px;
     cursor: pointer;
     padding: 10px;
-    border-radius: 50%;
+    border-radius: 30%;
     transition: background-color 0.3s;
 }
 
 .nav-icon:hover {
-    background-color: #f0f2f5;
+    background-color: #f4f4f4;
+    transform: scale(1.2);
+
 }
 
 /* Auth Container */
@@ -151,6 +153,13 @@ body {
 .auth-container h1 {
     color: #1a73e8;
     margin-bottom: 20px;
+}
+
+.dog-logo {
+    width: 100px;              
+    height: auto;              
+    margin: auto ;         
+    display: block;            
 }
 
 .auth-container form {
@@ -246,6 +255,25 @@ body {
     gap: 15px;
 }
 
+.my-posts-container{
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.no-posts { 
+    background-image: url('images/no_post.png'); 
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    opacity: 0.3;
+    padding: 250px 25px 250px 25px; 
+    text-align: center;
+}
+
 .action-button {
     cursor: pointer;
     font-size: 20px;
@@ -303,7 +331,7 @@ body {
 .profile-edit {
     margin: 30px 0;
     padding: 20px;
-    background: #f9f9f9;
+    background: #cae4ff;
     border-radius: 8px;
 }
 
