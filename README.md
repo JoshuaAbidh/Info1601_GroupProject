@@ -67,9 +67,7 @@ cd Info1601_GroupProject
 PS C:\Users\YourPcName\Documents\GitHub\Info1601_GroupProject> cd backend
 PS C:\Users\YourPcName\Documents\GitHub\Info1601_GroupProject\backend>
 ```
-- Install the required dependencies:
-```powershell
-PS C:\Users\YourPcName\Documents\GitHub\Info1601_GroupProject\backend> npm install
+
 ```
 - Start the backend server:
 ```powershell
