@@ -46,6 +46,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+const mongoose = require('mongoose');
+
+// MongoDB Connection
+console.log('MONGO_URI:', process.env.MONGO_URI);
+mongoose.connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+})
+.then(() => {
+    console.log('Connected to MongoDB Atlas');
+    createDefaultAccount(); // Create or update the default account
+})
+.catch(err => console.error('MongoDB Atlas connection error:', err));
+
+mongoose.connection.on('connected', () => {
+    console.log('MongoDB Atlas connection established successfully');
+});
+
+mongoose.connection.on('error', (err) => {
+    console.error('MongoDB connection error:', err);
+});
+
 // API Functions
 async function login(username, password) {
     try {
@@ -179,6 +201,14 @@ async function addReaction(postId, reaction) {
     }
 }
 
+async function getConfig() {
+    const response = await fetch('http://localhost:5000/api/config');
+    const config = await response.json();
+    console.log('API URL:', config.apiUrl);
+}
+
+getConfig();
+
 // Event Handlers
 async function handleLogin(e) {
     e.preventDefault();
@@ -262,6 +292,11 @@ function showRegisterPage() {
         </div>
     `;
     document.getElementById('registerForm').addEventListener('submit', handleRegister);
+}
+
+function showRegisterForm() {
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('registerForm').style.display = 'block';
 }
 
 async function showMainPage() {

@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -50,15 +51,23 @@ const createDefaultAccount = async () => {
     }
 };
 
-mongoose.connect('mongodb://localhost:27017/pawgram', {
+mongoose.connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true
 })
 .then(() => {
-    console.log('Connected to MongoDB');
+    console.log('Connected to MongoDB Atlas');
     createDefaultAccount(); // Create or update the default account
 })
-.catch(err => console.error('MongoDB connection error:', err));
+.catch(err => console.error('MongoDB Atlas connection error:', err));
+
+mongoose.connection.on('connected', () => {
+    console.log('MongoDB Atlas connection established successfully');
+});
+
+mongoose.connection.on('error', (err) => {
+    console.error('MongoDB Atlas connection error:', err);
+});
 
 // User Schema
 const userSchema = new mongoose.Schema({
@@ -112,10 +121,12 @@ const authenticateToken = (req, res, next) => {
 app.post('/api/register', async (req, res) => {
     try {
         const { username, password } = req.body;
-        
+        console.log('Registration attempt for username:', username);
+
         // Check if user exists
         const existingUser = await User.findOne({ username });
         if (existingUser) {
+            console.error('Username already exists:', username);
             return res.status(400).json({ error: 'Username already exists' });
         }
 
@@ -130,13 +141,11 @@ app.post('/api/register', async (req, res) => {
         });
 
         await user.save();
+        console.log('User registered successfully:', username);
         res.status(201).json({ message: 'User registered successfully' });
     } catch (error) {
-        if (error.code === 11000) {
-            res.status(400).json({ error: 'Username already exists' });
-        } else {
-            res.status(500).json({ error: 'Error registering user' });
-        }
+        console.error('Error registering user:', error);
+        res.status(500).json({ error: 'Error registering user' });
     }
 });
 
@@ -144,21 +153,25 @@ app.post('/api/register', async (req, res) => {
 app.post('/api/login', async (req, res) => {
     try {
         const { username, password } = req.body;
-        
+        console.log('Login attempt for username:', username);
+
         // Find user
         const user = await User.findOne({ username });
         if (!user) {
+            console.error('User not found:', username);
             return res.status(400).json({ error: 'User not found' });
         }
 
         // Check password
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) {
+            console.error('Invalid password for user:', username);
             return res.status(400).json({ error: 'Invalid password' });
         }
 
         // Create token
         const token = jwt.sign({ username: user.username }, 'your-secret-key');
+        console.log('Login successful for user:', username);
         res.json({
             token,
             user: {
@@ -168,6 +181,7 @@ app.post('/api/login', async (req, res) => {
             }
         });
     } catch (error) {
+        console.error('Error logging in:', error);
         res.status(500).json({ error: 'Error logging in' });
     }
 });
@@ -389,6 +403,11 @@ app.get('/api/users/:username', authenticateToken, async (req, res) => {
         console.error('Error fetching user info:', error);
         res.status(500).json({ error: 'Error fetching user info' });
     }
+});
+
+// Get API Config
+app.get('/api/config', (req, res) => {
+    res.json({ apiUrl: process.env.API_URL });
 });
 
 // Error handling middleware
