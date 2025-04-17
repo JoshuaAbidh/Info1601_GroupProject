@@ -241,7 +241,7 @@ async function handleRegister(e) {
         
         currentUser = {
             username: username,
-            profilePicture: 'https://ui-avatars.com/api/?name=Default+User&background=random', // New default profile picture
+            profilePicture: 'images/filler.png', // New default profile picture
             bio: ''
         };
         token = loginData.token;
