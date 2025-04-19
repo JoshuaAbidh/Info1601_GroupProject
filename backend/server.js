@@ -17,11 +17,11 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static('public'));
 
 // Serve static files from the Project_Folder
-app.use(express.static(path.join(__dirname, '../Project_Folder')));
+app.use(express.static(path.join(__dirname, 'Project_Folder')));
 
 // Serve the index.html file for the root route
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../Project_Folder', 'index.html'));
+    res.sendFile(path.join(__dirname, 'Project_Folder', 'index.html'));
 });
 
 // MongoDB Connection
@@ -422,6 +422,11 @@ app.get('/api/config', (req, res) => {
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ error: 'Something went wrong!' });
+});
+
+// Fallback for unknown routes
+app.use((req, res) => {
+    res.status(404).sendFile(path.join(__dirname, 'Project_Folder', 'index.html'));
 });
 
 app.listen(PORT, () => {
