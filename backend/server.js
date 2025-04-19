@@ -16,6 +16,14 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static('public'));
 
+// Serve static files from the Project_Folder
+app.use(express.static(path.join(__dirname, '../Project_Folder')));
+
+// Serve the index.html file for the root route
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../Project_Folder', 'index.html'));
+});
+
 // MongoDB Connection
 const createDefaultAccount = async () => {
     try {
