@@ -4,7 +4,7 @@ let posts = [];
 let token = null;
 
 // API Configuration
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'https://furtography.onrender.com/api';
 
 // DOM Elements
 const loginForm = document.getElementById('loginForm');
