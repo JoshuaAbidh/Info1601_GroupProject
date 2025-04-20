@@ -1,5 +1,8 @@
 # FurTography 🐾
 
+# Official website:
+https://furtography.onrender.com
+
 ## About FurTography
 
 FurTography is more than just a social media platform for pet lovers—it's a sanctuary in the digital world where pet parents can share their furry companions' moments without the toxicity that often plagues traditional social media platforms.
@@ -44,11 +47,10 @@ FurTography is more than just a platform—it's a movement towards a kinder, mor
 
 Before you begin, ensure you have the following installed:
 - Node.js (v14 or higher)
-- MongoDB
 - A code editor (VS Code recommended)
 - live server (VS Code extension)
 
-### Installation Steps
+### Setup Steps
 
 1. Clone the repository
 ```cmd
@@ -56,12 +58,7 @@ git clone https://github.com/JoshuaAbidh/Info1601_GroupProject.git
 cd Info1601_GroupProject
 ```
 
-2. Install MongoDB
-- Download and install MongoDB Community Server from [MongoDB's official website](https://www.mongodb.com/try/download/community)
-- Follow the installation wizard
-- Start MongoDB service
-
-3. Set up the backend
+2. Set up the backend
 - Open PowerShell Command Prompt in VS Code or Replit
 - Navigate to the backend directory:
 ```powershell
@@ -72,10 +69,10 @@ PS C:\Users\YourPcName\Documents\GitHub\Info1601_GroupProject\backend>
 ```
 - Start the backend server:
 ```powershell
-PS C:\Users\YourPcName\Documents\GitHub\Info1601_GroupProject\backend> npm run dev
+PS C:\Users\YourPcName\Documents\GitHub\Info1601_GroupProject\backend> npm run start
 ```
 
-4. Open the frontend
+3. Open the frontend
 - Navigate to the `project_folder` directory
 - Open `index.html` in your web browser
 - Or use a local server (e.g., Live Server in VS Code)
@@ -111,8 +108,8 @@ I, Joshua Abidh, the DevOps of this project will oversee all Pull Requests made 
 This Project was done by All Members of The FurTography group which includes: 
 Joshua - DevOps
 Dashon - Marketing
-Hovan - Lead and Ui
-Chelsea - Ui
+Hovan - Lead
+Chelsea - Ui Design
 
 This project could not have been done without their ideas, guidance and constant determination. 
 
